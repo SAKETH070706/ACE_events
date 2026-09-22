@@ -1,0 +1,200 @@
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 999;
+
+    padding: 25px;
+}
+
+.create-event-modal {
+    width: min(850px, 90vw);
+
+    background: white;
+
+    padding: 40px;
+
+    border-radius: 18px;
+
+    animation: popup 0.25s ease;
+
+    max-height: 90vh;
+    overflow-y: auto;
+
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes popup {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.create-event-modal h2 {
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #6b7280;
+    margin-bottom: 30px;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.create-event-modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-weight: 600;
+}
+
+.input-group textarea {
+    width: 100%;
+    resize: vertical;
+
+    min-height: 120px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-family: inherit;
+
+    outline: none;
+}
+
+.input-group textarea:focus {
+    border-color: #2563eb;
+}
+
+.file-upload {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+
+    padding: 18px;
+
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+.upload-btn {
+    width: max-content;
+
+    padding: 12px 22px;
+
+    background: #2563eb;
+    color: white;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-weight: 500;
+
+    transition: 0.2s;
+}
+
+.upload-btn:hover {
+    background: #1d4ed8;
+}
+
+.selected-file {
+    color: #2563eb;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.modal-buttons {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 16px;
+
+    margin-top: 10px;
+
+    padding-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .create-event-modal {
+        width: 100%;
+        padding: 24px 18px;
+    }
+
+    .modal-buttons {
+        flex-direction: column-reverse;
+    }
+
+    .modal-buttons button {
+        width: 100%;
+    }
+
+    .create-event-modal h2 {
+        font-size: 22px;
+    }
+
+    .upload-btn {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .create-event-modal {
+        padding: 18px 14px;
+        border-radius: 12px;
+    }
+
+    .subtitle {
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+}
+
+.workflow-options {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.workflow-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}

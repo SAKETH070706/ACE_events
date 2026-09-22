@@ -1,0 +1,48 @@
+.dashboard-container {
+    width: 92%;
+    max-width: 1200px;
+    margin: 30px auto;
+    box-sizing: border-box;
+}
+
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.dashboard-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+}
+
+.dashboard-filters button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.dashboard-filters button:hover {
+    background: #e2e8f0;
+}
+
+.dashboard-filters .active {
+    background: #2563eb;
+    color: white;
+}
+
+@media (max-width: 600px) {
+    .dashboard-container {
+        width: 95%;
+        margin-top: 16px;
+    }
+}

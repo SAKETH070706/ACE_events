@@ -1,0 +1,55 @@
+.btn {
+    padding: 12px 20px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+
+    cursor: pointer;
+    user-select: none;
+    touch-action: manipulation;
+
+    transition: all 0.2s ease;
+}
+
+.primary {
+    background: #2563EB;
+    color: white;
+}
+
+.primary:hover {
+    background: #1D4ED8;
+}
+
+.secondary {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.secondary:hover {
+    background: #f5f5f5;
+}
+
+.danger {
+    background: #DC2626;
+    color: white;
+}
+
+.danger:hover {
+    background: #B91C1C;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}

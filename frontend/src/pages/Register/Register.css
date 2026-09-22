@@ -1,0 +1,43 @@
+.register-page{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#f8fafc;
+
+    padding:20px;
+}
+
+.register-page .card{
+
+    width:100%;
+    max-width:420px;
+}
+
+.register-page h1{
+
+    margin-bottom:8px;
+
+    color:#111827;
+}
+
+.register-page p{
+
+    color:#6b7280;
+
+    margin-bottom:25px;
+}
+
+.register-page form{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+}

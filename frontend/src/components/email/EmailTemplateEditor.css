@@ -1,0 +1,69 @@
+.email-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.email-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.email-toolbar button,
+.email-toolbar select {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    font-weight: 600;
+}
+
+.email-toolbar input[type="color"] {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+}
+
+.email-editor-content {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    min-height: 180px;
+    padding: 12px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.email-editor-content .tiptap {
+    min-height: 150px;
+    outline: none;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.email-preview h3 {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.email-preview-body {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    background: #f8fafc;
+    min-height: 80px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .email-toolbar button,
+    .email-toolbar select {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+}
