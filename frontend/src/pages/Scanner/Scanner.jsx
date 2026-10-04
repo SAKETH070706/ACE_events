@@ -111,10 +111,15 @@ function Scanner() {
     const extractToken = (rawText) => {
         if (!rawText) return "";
         const clean = rawText.trim();
+        // Check if QR text contains Xcelerate verification URL
+        if (clean.includes("/verify/")) {
+            const parts = clean.split("/verify/");
+            return parts[1]?.split("?")[0]?.split("/")[0]?.trim() || clean;
+        }
         // Check if QR text contains URL like .../checkin/scan/<token>
         if (clean.includes("/checkin/scan/")) {
             const parts = clean.split("/checkin/scan/");
-            return parts[1]?.split("?")[0]?.split("/")[0] || clean;
+            return parts[1]?.split("?")[0]?.split("/")[0]?.trim() || clean;
         }
         return clean;
     };
@@ -589,8 +594,8 @@ function Scanner() {
                                         </div>
 
                                         <div className="info-item">
-                                            <span>ACE ID</span>
-                                            <strong>{scanResult.participant.aceId || "N/A"}</strong>
+                                            <span>Reg No / ID</span>
+                                            <strong>{scanResult.participant.participantId || scanResult.participant.registrationNumber || "N/A"}</strong>
                                         </div>
 
                                         <div className="info-item">

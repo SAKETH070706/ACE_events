@@ -150,33 +150,30 @@ export const getCurrentSession = (event) => {
     const currentDate = getCurrentDateIST();
     const currentMinutes = getCurrentTimeMinutesIST();
 
-    return (
-        sessions.find((session) => {
-            if (session.date !== currentDate) {
-                return false;
-            }
+    // 1. Exact match within scheduled time window
+    const exactMatch = sessions.find((session) => {
+        if (session.date !== currentDate) {
+            return false;
+        }
 
-            const startMinutes = timeToMinutes(
-                session.startTime
-            );
+        const startMinutes = timeToMinutes(session.startTime);
+        const endMinutes = timeToMinutes(session.endTime);
 
-            const endMinutes = timeToMinutes(
-                session.endTime
-            );
+        if (startMinutes === null || endMinutes === null) {
+            return false;
+        }
 
-            if (
-                startMinutes === null ||
-                endMinutes === null
-            ) {
-                return false;
-            }
+        return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    });
 
-            return (
-                currentMinutes >= startMinutes &&
-                currentMinutes < endMinutes
-            );
-        }) || null
-    );
+    if (exactMatch) return exactMatch;
+
+    // 2. Same date fallback (allows check-in before/after exact minutes on event day)
+    const todaySession = sessions.find((session) => session.date === currentDate);
+    if (todaySession) return todaySession;
+
+    // 3. Fallback to first session (allows pre-event testing and general check-in)
+    return sessions[0] || null;
 };
 
 
@@ -512,13 +509,24 @@ export const processCheckIn = async ({
         throw new Error("QR token is required.");
     }
 
+    // Clean token if full URL was scanned (e.g. from Xcelerate pass QR or checkin URL)
+    let cleanToken = String(qrToken).trim();
+    if (cleanToken.includes("/verify/")) {
+        cleanToken = cleanToken.split("/verify/")[1].split("?")[0].split("/")[0].trim();
+    } else if (cleanToken.includes("/checkin/scan/")) {
+        cleanToken = cleanToken.split("/checkin/scan/")[1].split("?")[0].split("/")[0].trim();
+    }
 
     /*
-     * 1. Find participant using QR token.
+     * 1. Find participant using clean QR token, raw token, or participantId (Reg No).
      */
     const checkIn =
         await CheckIn.findOne({
-            qrToken,
+            $or: [
+                { qrToken: cleanToken },
+                { qrToken: String(qrToken).trim() },
+                { participantId: cleanToken },
+            ],
         });
 
 
