@@ -388,7 +388,7 @@ function Scanner() {
                             <FaQrcode />
                         </div>
                         <div>
-                            <h1>ACE Attendance Scanner</h1>
+                            <h1>ACM Attendance Scanner</h1>
                             <p>Scan participant QR codes or perform manual check-in for active sessions.</p>
                         </div>
                     </div>
@@ -476,7 +476,7 @@ function Scanner() {
                             <form className="manual-form" onSubmit={handleManualSubmit}>
                                 <h2>Manual Check-In</h2>
                                 <p className="helper-text">
-                                    Support both ACE members (ACE ID) and non-ACE participants (Email).
+                                    Support both ACM members (Reg No) and non-ACM participants (Email).
                                 </p>
 
                                 {eventsList.length > 0 ? (
@@ -510,7 +510,7 @@ function Scanner() {
 
                                 <Input
                                     label="Participant ID"
-                                    placeholder="Enter ACE ID or Email address"
+                                    placeholder="Enter Registration No or Email address"
                                     value={manualForm.participantId}
                                     onChange={(e) =>
                                         setManualForm({
@@ -589,7 +589,7 @@ function Scanner() {
                                         <div className="info-item">
                                             <span>Member Type</span>
                                             <span className={`member-tag ${scanResult.participant.memberType}`}>
-                                                {scanResult.participant.memberType === "ace" ? "ACE Member" : "Non-ACE"}
+                                                {scanResult.participant.memberType === "ace" ? "ACM Member" : "Non-Member"}
                                             </span>
                                         </div>
 
