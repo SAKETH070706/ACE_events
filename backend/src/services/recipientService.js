@@ -37,16 +37,27 @@ const normalizeKey = (key = "") =>
 const findField = (record, aliases) => {
     const entries = Object.entries(record);
 
+    // Pass 1: Check for exact match first across all aliases
     for (const alias of aliases) {
         const normalizedAlias = normalizeKey(alias);
 
         const match = entries.find(([key]) => {
             const normalized = normalizeKey(key);
+            return normalized === normalizedAlias;
+        });
 
-            return (
-                normalized === normalizedAlias ||
-                normalized.startsWith(`${normalizedAlias} `)
-            );
+        if (match && match[1] !== undefined && match[1] !== null) {
+            return String(match[1]).trim();
+        }
+    }
+
+    // Pass 2: Fall back to prefix matching (e.g. "email (college id)")
+    for (const alias of aliases) {
+        const normalizedAlias = normalizeKey(alias);
+
+        const match = entries.find(([key]) => {
+            const normalized = normalizeKey(key);
+            return normalized.startsWith(`${normalizedAlias} `);
         });
 
         if (match && match[1] !== undefined && match[1] !== null) {

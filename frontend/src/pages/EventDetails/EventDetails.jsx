@@ -54,7 +54,7 @@ function EventDetails() {
     const [activePhase, setActivePhase] = useState("pre");
 
     // Pre-Event States
-    const [recipientSource, setRecipientSource] = useState("googleSheet");
+    const [recipientSource, setRecipientSource] = useState("googleForm");
     const [googleFormUrl, setGoogleFormUrl] = useState("");
     const [googleSheetUrl, setGoogleSheetUrl] = useState("");
     const [recipientFile, setRecipientFile] = useState(null);
@@ -155,7 +155,7 @@ function EventDetails() {
         if (!event) return;
 
         // Pre-event init
-        setRecipientSource(event.preEvent?.recipientSource || "googleSheet");
+        setRecipientSource(event.preEvent?.recipientSource === "googleSheet" ? "googleForm" : (event.preEvent?.recipientSource || "googleForm"));
         setGoogleFormUrl(event.preEvent?.sourceConfig?.googleFormUrl || event.googleForm?.url || "");
         setGoogleSheetUrl(event.preEvent?.sourceConfig?.googleSheetUrl || event.googleSheet?.url || "");
         setMarketingSubject(event.preEvent?.emailTemplate?.subject || "");
@@ -684,7 +684,7 @@ function EventDetails() {
                                     </select>
                                 </div>
 
-                                {recipientSource === "googleForm" && (
+                                {(recipientSource === "googleForm" || recipientSource === "googleSheet") && (
                                     <>
                                         <Input
                                             label="Google Form URL"

@@ -139,6 +139,7 @@ export const UNIFIED_HEADER_ALIASES = {
 
     email: [
         "email",
+        "e mail",
         "mail",
         "e-mail",
         "email address",
@@ -205,18 +206,22 @@ export const UNIFIED_HEADER_ALIASES = {
 
 export const findColumnIndex = (headers, aliases) => {
 
-    return headers.findIndex((header) => {
-
+    // Pass 1: exact match
+    const exactIndex = headers.findIndex((header) => {
         const normalized = normalizeHeader(header);
+        return aliases.some((alias) => normalizeHeader(alias) === normalized);
+    });
 
+    if (exactIndex !== -1) {
+        return exactIndex;
+    }
+
+    // Pass 2: prefix match (e.g. "email (college id)")
+    return headers.findIndex((header) => {
+        const normalized = normalizeHeader(header);
         return aliases.some((alias) => {
-
             const normalizedAlias = normalizeHeader(alias);
-
-            return (
-                normalized === normalizedAlias ||
-                normalized.startsWith(`${normalizedAlias} `)
-            );
+            return normalized.startsWith(`${normalizedAlias} `);
         });
     });
 };
