@@ -144,7 +144,84 @@ function EventDetails() {
         const interval = setInterval(() => {
             fetchEvent();
         }, 2000);
-        return () => clearInterval(interval);
+    
+    const handleDownloadAttendanceCsv = () => {
+        if (!checkInRecords || checkInRecords.length === 0) {
+            toast.error("No check-in records to export.");
+            return;
+        }
+
+        const headers = [
+            "S.No",
+            "Name",
+            "Participant ID",
+            "Email",
+            "Type",
+            "Session 1 Status",
+            "Session 1 Checked In At",
+            "Session 2 Status",
+            "Session 2 Checked In At",
+            "Attended Sessions",
+            "Attendance Percentage",
+            "Eligibility"
+        ];
+
+        const escapeCsv = (val) => {
+            if (val === null || val === undefined) return '""';
+            let str = String(val).trim();
+            if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+                str = str.replace(/"/g, '""');
+            }
+            return `"${str}"`;
+        };
+
+        const rows = [headers.join(",")];
+
+        checkInRecords.forEach((rec, idx) => {
+            const s1 = rec.sessions?.find(s => s.sessionId === 'xcel-day-1' || s.sessionName?.includes('1')) || rec.sessions?.[0] || {};
+            const s2 = rec.sessions?.find(s => s.sessionId === 'xcel-day-2' || s.sessionName?.includes('2')) || rec.sessions?.[1] || {};
+
+            const formatTime = (dt) => {
+                if (!dt) return "N/A";
+                try {
+                    return new Date(dt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true });
+                } catch {
+                    return String(dt);
+                }
+            };
+
+            const row = [
+                escapeCsv(idx + 1),
+                escapeCsv(rec.name || ""),
+                escapeCsv(rec.participantId || ""),
+                escapeCsv(rec.email || ""),
+                escapeCsv(rec.memberType === "ace" ? "ACE Member" : "Non-ACE"),
+                escapeCsv(s1.checkedIn ? "Present" : "Absent"),
+                escapeCsv(s1.checkedIn ? formatTime(s1.checkedInAt) : "N/A"),
+                escapeCsv(s2.checkedIn ? "Present" : "Absent"),
+                escapeCsv(s2.checkedIn ? formatTime(s2.checkedInAt) : "N/A"),
+                escapeCsv(`${rec.attendedSessions || 0} / ${rec.totalSessions || 2}`),
+                escapeCsv(`${rec.attendancePercentage || 0}%`),
+                escapeCsv(rec.eligible ? "Eligible" : "Not Eligible")
+            ];
+
+            rows.push(row.join(","));
+        });
+
+        const csvContent = rows.join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${event?.eventName || "Xcelerate"}_Attendance_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success("Attendance CSV downloaded successfully!");
+    };
+
+    return () => clearInterval(interval);
     }, [event?.automation?.status]);
 
     useEffect(() => {
@@ -1136,9 +1213,19 @@ function EventDetails() {
                                             Live participant attendance, percentage, eligibility, and individual QR codes.
                                         </p>
                                     </div>
-                                    <Button variant="secondary" onClick={fetchRecords} disabled={loadingRecords}>
-                                        <FaSync /> {loadingRecords ? "Refreshing..." : "Refresh"}
-                                    </Button>
+                                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleDownloadAttendanceCsv}
+                                            disabled={loadingRecords || checkInRecords.length === 0}
+                                            style={{ backgroundColor: "#16a34a", borderColor: "#16a34a" }}
+                                        >
+                                            <FaDownload /> Download Attendance CSV
+                                        </Button>
+                                        <Button variant="secondary" onClick={fetchRecords} disabled={loadingRecords}>
+                                            <FaSync /> {loadingRecords ? "Refreshing..." : "Refresh"}
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 {/* Summary Stats */}
