@@ -144,7 +144,9 @@ function EventDetails() {
         const interval = setInterval(() => {
             fetchEvent();
         }, 2000);
-    
+        return () => clearInterval(interval);
+    }, [event?.automation?.status]);
+
     const handleDownloadAttendanceCsv = () => {
         if (!checkInRecords || checkInRecords.length === 0) {
             toast.error("No check-in records to export.");
@@ -220,9 +222,6 @@ function EventDetails() {
         URL.revokeObjectURL(url);
         toast.success("Attendance CSV downloaded successfully!");
     };
-
-    return () => clearInterval(interval);
-    }, [event?.automation?.status]);
 
     useEffect(() => {
         fetchEvent();
