@@ -585,8 +585,7 @@ function EventDetails() {
             rec.name?.toLowerCase().includes(q) ||
             rec.email?.toLowerCase().includes(q) ||
             rec.participantId?.toLowerCase().includes(q) ||
-            rec.aceId?.toLowerCase().includes(q) ||
-            rec.memberType?.toLowerCase().includes(q)
+                        rec.memberType?.toLowerCase().includes(q)
         );
     });
 
@@ -746,7 +745,7 @@ function EventDetails() {
                                         <table className="preview-table">
                                             <thead>
                                                 <tr>
-                                                    <th>ACE ID</th>
+                                                    <th>Participant ID</th>
                                                     <th>Name</th>
                                                     <th>Email</th>
                                                     <th>Branch</th>
@@ -756,7 +755,7 @@ function EventDetails() {
                                             <tbody>
                                                 {recipientPreview.map((row, i) => (
                                                     <tr key={row.email || i}>
-                                                        <td>{row.aceId || "--"}</td>
+                                                        <td>{row.participantId || row.registrationNumber || "--"}</td>
                                                         <td>{row.name || "--"}</td>
                                                         <td>{row.email}</td>
                                                         <td>{row.branch || "--"}</td>
@@ -1167,7 +1166,7 @@ function EventDetails() {
                                     <FaSearch className="search-icon" />
                                     <input
                                         type="text"
-                                        placeholder="Search by name, email, ACE ID, or participant ID..."
+                                        placeholder="Search by name, email, or participant ID..."
                                         value={recordsSearch}
                                         onChange={(e) => setRecordsSearch(e.target.value)}
                                     />
@@ -1187,7 +1186,6 @@ function EventDetails() {
                                                     <th>Name</th>
                                                     <th>Email</th>
                                                     <th>Type</th>
-                                                    <th>ACE ID</th>
                                                     <th>Participant ID</th>
                                                     <th>Attended</th>
                                                     <th>Percentage</th>
@@ -1207,7 +1205,6 @@ function EventDetails() {
                                                                 {rec.memberType === "ace" ? "ACE" : "Non-ACE"}
                                                             </span>
                                                         </td>
-                                                        <td>{rec.aceId || "N/A"}</td>
                                                         <td className="mono-text">{rec.participantId}</td>
                                                         <td>
                                                             {rec.attendedSessions} / {rec.totalSessions}
@@ -1385,7 +1382,7 @@ function EventDetails() {
                                                 <table className="preview-table">
                                                     <thead>
                                                         <tr>
-                                                            <th>ACE ID</th>
+                                                            <th>Participant ID</th>
                                                             <th>Name</th>
                                                             <th>Email</th>
                                                             <th>Branch</th>
@@ -1395,7 +1392,7 @@ function EventDetails() {
                                                     <tbody>
                                                         {participantPreview.map((row, i) => (
                                                             <tr key={row.email || i}>
-                                                                <td>{row.aceId || "--"}</td>
+                                                                <td>{row.participantId || row.registrationNumber || "--"}</td>
                                                                 <td>{row.name || "--"}</td>
                                                                 <td>{row.email}</td>
                                                                 <td>{row.branch || "--"}</td>
@@ -1589,11 +1586,7 @@ function EventDetails() {
                                 <p>
                                     <strong>Participant ID:</strong> {selectedQrParticipant.participantId}
                                 </p>
-                                {selectedQrParticipant.aceId && (
-                                    <p>
-                                        <strong>ACE ID:</strong> {selectedQrParticipant.aceId}
-                                    </p>
-                                )}
+
                                 <p>
                                     <strong>Email:</strong> {selectedQrParticipant.email}
                                 </p>
