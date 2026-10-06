@@ -52,10 +52,18 @@ export const registerUser = async ({
 
 export const loginUser = async ({
     email,
+    username,
     password
 }) => {
 
-    const user = await User.findOne({ email });
+    const identifier = String(username || email || "").trim().toLowerCase();
+    const user = await User.findOne({
+        $or: [
+            { username: identifier },
+            { email: identifier },
+            { email: `${identifier}@ace.com` }
+        ]
+    });
 
     if (!user) {
         throw new Error("Invalid email or password");
