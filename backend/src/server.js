@@ -38,6 +38,16 @@ app.use(
 );
 app.use(express.json({ limit: "2mb" }));
 
+// Health check endpoints for uptime monitors / cron-jobs
+app.get(["/", "/health", "/api/health"], (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        service: "ACE Events Backend",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+    });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/certificates", certificateRoutes);

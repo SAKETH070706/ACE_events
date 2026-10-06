@@ -2,7 +2,7 @@ import "./EventDetails.css";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { FaQrcode, FaDownload, FaTimes, FaPlus, FaTrash, FaSearch, FaCheck, FaSync } from "react-icons/fa";
+import { FaQrcode, FaDownload, FaTimes, FaPlus, FaTrash, FaSearch, FaCheck, FaSync, FaEdit } from "react-icons/fa";
 import TemplateEditor from "../../components/TemplateEditor/TemplateEditor";
 import EmailTemplateEditor from "../../components/email/EmailTemplateEditor";
 import Navbar from "../../components/layout/Navbar/Navbar";
@@ -91,6 +91,7 @@ function EventDetails() {
     const [checkInGoogleSheetUrl, setCheckInGoogleSheetUrl] = useState("");
     const [checkInSessions, setCheckInSessions] = useState([]);
     const [savingCheckInConfig, setSavingCheckInConfig] = useState(false);
+    const [editingSessionId, setEditingSessionId] = useState(null);
 
     // New Session Form State
     const [newSession, setNewSession] = useState({
@@ -153,20 +154,26 @@ function EventDetails() {
             return;
         }
 
+        // Dynamically get the configured sessions
+        const eventSessions = event?.checkIn?.sessions?.length
+            ? event.checkIn.sessions
+            : (checkInRecords[0]?.sessions || []);
+
         const headers = [
             "S.No",
             "Name",
             "Participant ID",
             "Email",
-            "Type",
-            "Session 1 Status",
-            "Session 1 Checked In At",
-            "Session 2 Status",
-            "Session 2 Checked In At",
-            "Attended Sessions",
-            "Attendance Percentage",
-            "Eligibility"
+            "Type"
         ];
+
+        eventSessions.forEach((s, idx) => {
+            const sName = s.name || s.sessionName || `Session ${idx + 1}`;
+            headers.push(`${sName} Status`);
+            headers.push(`${sName} Checked In At`);
+        });
+
+        headers.push("Attended Sessions", "Attendance Percentage", "Eligibility");
 
         const escapeCsv = (val) => {
             if (val === null || val === undefined) return '""';
@@ -180,9 +187,6 @@ function EventDetails() {
         const rows = [headers.join(",")];
 
         checkInRecords.forEach((rec, idx) => {
-            const s1 = rec.sessions?.find(s => s.sessionId === 'xcel-day-1' || s.sessionName?.includes('1')) || rec.sessions?.[0] || {};
-            const s2 = rec.sessions?.find(s => s.sessionId === 'xcel-day-2' || s.sessionName?.includes('2')) || rec.sessions?.[1] || {};
-
             const formatTime = (dt) => {
                 if (!dt) return "N/A";
                 try {
@@ -197,15 +201,23 @@ function EventDetails() {
                 escapeCsv(rec.name || ""),
                 escapeCsv(rec.participantId || ""),
                 escapeCsv(rec.email || ""),
-                escapeCsv(rec.memberType === "ace" ? "ACE Member" : "Non-ACE"),
-                escapeCsv(s1.checkedIn ? "Present" : "Absent"),
-                escapeCsv(s1.checkedIn ? formatTime(s1.checkedInAt) : "N/A"),
-                escapeCsv(s2.checkedIn ? "Present" : "Absent"),
-                escapeCsv(s2.checkedIn ? formatTime(s2.checkedInAt) : "N/A"),
-                escapeCsv(`${rec.attendedSessions || 0} / ${rec.totalSessions || 2}`),
+                escapeCsv(rec.memberType === "ace" ? "ACE Member" : "Non-ACE")
+            ];
+
+            eventSessions.forEach((s) => {
+                const sAtt = rec.sessions?.find(
+                    (sess) => sess.sessionId === s.sessionId || sess.sessionName === s.name
+                ) || {};
+
+                row.push(escapeCsv(sAtt.checkedIn ? "Present" : "Absent"));
+                row.push(escapeCsv(sAtt.checkedIn ? formatTime(sAtt.checkedInAt) : "N/A"));
+            });
+
+            row.push(
+                escapeCsv(`${rec.attendedSessions || 0} / ${rec.totalSessions || eventSessions.length || 1}`),
                 escapeCsv(`${rec.attendancePercentage || 0}%`),
                 escapeCsv(rec.eligible ? "Eligible" : "Not Eligible")
-            ];
+            );
 
             rows.push(row.join(","));
         });
@@ -215,7 +227,7 @@ function EventDetails() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${event?.eventName || "Xcelerate"}_Attendance_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute("download", `${event?.eventName || "Event"}_Attendance_${new Date().toISOString().slice(0, 10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -515,11 +527,38 @@ function EventDetails() {
         }
 
         const duplicate = checkInSessions.find(
-            (s) => s.sessionId.toLowerCase() === newSession.sessionId.toLowerCase().trim()
+            (s) => s.sessionId.toLowerCase() === newSession.sessionId.toLowerCase().trim() && s.sessionId !== editingSessionId
         );
 
         if (duplicate) {
             toast.error(`Session ID "${newSession.sessionId}" already exists.`);
+            return;
+        }
+
+        if (editingSessionId) {
+            const updatedSessions = checkInSessions.map((s) =>
+                s.sessionId === editingSessionId
+                    ? {
+                          ...s,
+                          sessionId: newSession.sessionId.trim(),
+                          name: newSession.name.trim(),
+                          date: newSession.date.trim(),
+                          startTime: newSession.startTime.trim(),
+                          endTime: newSession.endTime.trim(),
+                      }
+                    : s
+            );
+
+            setCheckInSessions(updatedSessions);
+            setEditingSessionId(null);
+            setNewSession({
+                sessionId: `session-${updatedSessions.length + 1}`,
+                name: "",
+                date: newSession.date,
+                startTime: "09:00",
+                endTime: "12:00",
+            });
+            toast.success("Session updated! Click 'Save Check-In Configuration' to persist changes.");
             return;
         }
 
@@ -547,9 +586,35 @@ function EventDetails() {
         toast.success("Session added. Click 'Save Check-In Configuration' to persist changes.");
     };
 
+    const handleStartEditSession = (session) => {
+        setEditingSessionId(session.sessionId);
+        setNewSession({
+            sessionId: session.sessionId,
+            name: session.name || session.sessionName || "",
+            date: session.date || "",
+            startTime: session.startTime || "09:00",
+            endTime: session.endTime || "12:00",
+        });
+        toast.info(`Editing session: "${session.name || session.sessionId}".`);
+    };
+
+    const handleCancelEditSession = () => {
+        setEditingSessionId(null);
+        setNewSession({
+            sessionId: `session-${checkInSessions.length + 1}`,
+            name: "",
+            date: event?.eventDate ? new Date(event.eventDate).toISOString().slice(0, 10) : "",
+            startTime: "09:00",
+            endTime: "12:00",
+        });
+    };
+
     const handleRemoveSession = (sessionId) => {
+        if (editingSessionId === sessionId) {
+            handleCancelEditSession();
+        }
         setCheckInSessions(checkInSessions.filter((s) => s.sessionId !== sessionId));
-        toast.success("Session removed.");
+        toast.success("Session removed. Click 'Save Check-In Configuration' to persist changes.");
     };
 
     const handleSaveCheckInConfig = async () => {
@@ -1061,9 +1126,16 @@ function EventDetails() {
                                             </div>
                                         </div>
 
-                                        <Button type="submit" variant="secondary">
-                                            <FaPlus /> Add Session
-                                        </Button>
+                                        <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                                            <Button type="submit" variant="secondary">
+                                                {editingSessionId ? <><FaCheck /> Update Session</> : <><FaPlus /> Add Session</>}
+                                            </Button>
+                                            {editingSessionId && (
+                                                <Button type="button" variant="outline" onClick={handleCancelEditSession}>
+                                                    <FaTimes /> Cancel Edit
+                                                </Button>
+                                            )}
+                                        </div>
                                     </form>
 
                                     {/* Configured Sessions List */}
@@ -1074,21 +1146,31 @@ function EventDetails() {
                                         ) : (
                                             <div className="sessions-cards">
                                                 {checkInSessions.map((s, idx) => (
-                                                    <div key={s.sessionId || idx} className="session-card-item">
+                                                    <div key={s.sessionId || idx} className={`session-card-item ${editingSessionId === s.sessionId ? "editing" : ""}`}>
                                                         <div className="session-card-info">
                                                             <strong>
                                                                 {s.name} <span className="session-id-tag">#{s.sessionId}</span>
                                                             </strong>
                                                             <span>📅 {s.date} | ⏰ {s.startTime} - {s.endTime}</span>
                                                         </div>
-                                                        <button
-                                                            className="delete-session-btn"
-                                                            type="button"
-                                                            onClick={() => handleRemoveSession(s.sessionId)}
-                                                            title="Remove Session"
-                                                        >
-                                                            <FaTrash />
-                                                        </button>
+                                                        <div className="session-card-actions">
+                                                            <button
+                                                                className="edit-session-btn"
+                                                                type="button"
+                                                                onClick={() => handleStartEditSession(s)}
+                                                                title="Edit Session"
+                                                            >
+                                                                <FaEdit />
+                                                            </button>
+                                                            <button
+                                                                className="delete-session-btn"
+                                                                type="button"
+                                                                onClick={() => handleRemoveSession(s.sessionId)}
+                                                                title="Remove Session"
+                                                            >
+                                                                <FaTrash />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>

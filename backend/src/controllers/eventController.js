@@ -453,6 +453,64 @@ const configureCheckIn = async (req, res) => {
 
         await event.save();
 
+        // Dynamically synchronize all participant CheckIn records with the updated sessions
+        const configuredSessions = event.checkIn.sessions || [];
+        const requiredPercentage = event.checkIn.attendanceRequired ?? 75;
+
+        try {
+            const checkIns = await CheckIn.find({ eventId: event._id });
+            if (checkIns.length > 0 && configuredSessions.length > 0) {
+                for (const record of checkIns) {
+                    const existingMap = new Map();
+                    if (Array.isArray(record.sessions)) {
+                        record.sessions.forEach((s) => {
+                            if (s.sessionId) existingMap.set(s.sessionId, s);
+                        });
+                    }
+
+                    record.sessions = configuredSessions.map((cs, idx) => {
+                        let matched = existingMap.get(cs.sessionId);
+                        if (!matched && record.sessions && record.sessions[idx]) {
+                            const oldSess = record.sessions[idx];
+                            if (oldSess.checkedIn) {
+                                matched = oldSess;
+                            }
+                        }
+
+                        return {
+                            sessionId: cs.sessionId,
+                            date: cs.date,
+                            sessionName: cs.name,
+                            checkedIn: matched ? Boolean(matched.checkedIn) : false,
+                            checkedInAt: matched ? matched.checkedInAt : null,
+                            method: matched ? (matched.method || "manual") : "qr",
+                        };
+                    });
+
+                    const totalSessions = configuredSessions.length;
+                    const attendedSessions = record.sessions.filter((s) => s.checkedIn === true).length;
+                    const attendancePercentage = totalSessions > 0
+                        ? Math.round((attendedSessions / totalSessions) * 100)
+                        : 0;
+
+                    await CheckIn.updateOne(
+                        { _id: record._id },
+                        {
+                            $set: {
+                                sessions: record.sessions,
+                                totalSessions: totalSessions,
+                                attendedSessions: attendedSessions,
+                                attendancePercentage: attendancePercentage,
+                                eligible: attendancePercentage >= requiredPercentage,
+                            },
+                        }
+                    );
+                }
+            }
+        } catch (syncErr) {
+            console.error("Warning: Failed to sync checkIns during configureCheckIn:", syncErr);
+        }
+
         return res.status(200).json({
             success: true,
             message: "Check-In configuration saved successfully.",

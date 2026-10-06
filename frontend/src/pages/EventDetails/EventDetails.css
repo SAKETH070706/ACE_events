@@ -414,6 +414,30 @@
     color: #64748b;
 }
 
+.session-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.edit-session-btn {
+    background: #e0f2fe;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-session-btn:hover {
+    background: #bae6fd;
+    color: #0369a1;
+}
+
 .delete-session-btn {
     background: #fee2e2;
     color: #dc2626;
@@ -422,10 +446,19 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .delete-session-btn:hover {
     background: #fca5a5;
+}
+
+.session-card-item.editing {
+    border-color: #0284c7;
+    background: #f0f9ff;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
 }
 
 .no-items-text {

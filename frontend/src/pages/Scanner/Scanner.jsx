@@ -344,6 +344,10 @@ function Scanner() {
                     attendance: res.attendance,
                 });
                 setLastScanType("success");
+                setManualForm((prev) => ({
+                    ...prev,
+                    participantId: "",
+                }));
                 toast.success(res.message || "Check-In Successful!");
             }
         } catch (err) {

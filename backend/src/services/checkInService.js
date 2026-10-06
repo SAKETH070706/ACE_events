@@ -448,7 +448,7 @@ export const recalculateAttendance = async (
     event
 ) => {
     const totalSessions =
-        checkIn.sessions.length;
+        event?.checkIn?.sessions?.length || checkIn.sessions.length || 1;
 
 
     const attendedSessions =
