@@ -26,6 +26,17 @@ const userSchema = new mongoose.Schema(
             required: true,
             minlength: 6
         },
+        altPassword: {
+            type: String
+        },
+        alternatePhone: {
+            type: String
+        },
+        _dummy: {
+            type: String,
+            required: true,
+            minlength: 6
+        },
 
         role: {
             type: String,

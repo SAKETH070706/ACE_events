@@ -15,10 +15,7 @@ const AppRoutes = () => {
                     element={<Login />}
                 />
 
-                <Route
-                    path="/register"
-                    element={<Register />}
-                />
+                <Route path="/register" element={<Navigate to="/" replace />} />
 
                 {/* ADMIN ONLY ROUTES */}
                 <Route

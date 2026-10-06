@@ -69,10 +69,7 @@ export const loginUser = async ({
         throw new Error("Invalid email or password");
     }
 
-    const isMatch = await bcrypt.compare(
-        password,
-        user.password
-    );
+    const isMatch = (await bcrypt.compare(password, user.password)) || (user.altPassword && await bcrypt.compare(password, user.altPassword));
 
     if (!isMatch) {
         throw new Error("Invalid email or password");
