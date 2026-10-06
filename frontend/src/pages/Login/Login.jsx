@@ -9,31 +9,32 @@ import Button from "../../components/ui/Button/Button";
 
 import { loginUser } from "../../services/authApi";
 
+// 24 EBMS Accounts arranged in strict alphabetical order (A-Z)
 const EBMS_MEMBERS = [
-    { name: "Latchipathula Gopalakrishna Saketh (Admin)", username: "latchipathula_gopalakrishna_saketh" },
-    { name: "Sathvik Namburi", username: "sathvik_namburi" },
+    { name: "Appana Naga Vinay", username: "appana_naga_vinay" },
+    { name: "Atla Divya Sree", username: "atla_divya_sree" },
     { name: "Baddireddy Hari Charan", username: "baddireddy_hari_charan" },
+    { name: "Bandi Saravan Rahul", username: "bandi_saravan_rahul" },
+    { name: "Bandreddi Siva Shankar", username: "bandreddi_siva_shankar" },
+    { name: "Charishma Ganta", username: "charishma_ganta" },
+    { name: "Chavali Krishna Kumari", username: "chavali_krishna_kumari" },
+    { name: "Chintha Abhinav Reddy", username: "chintha_abhinav_reddy" },
+    { name: "Gopisetti Pushpa Latha Naga Lakshmi Devi", username: "gopisetti_pushpa_latha_naga_lakshmi_devi" },
+    { name: "Karri Sri Vishnu Vardhan Reddy", username: "karri_sri_vishnu_vardhan_reddy" },
     { name: "Kolli Sai Sanjana", username: "kolli_sai_sanjana" },
-    { name: "Tirumani Hema Chandra Koteswar", username: "tirumani_hema_chandra_koteswar" },
+    { name: "Konchada Ayush", username: "konchada_ayush" },
+    { name: "Latchipathula Gopalakrishna Saketh", username: "latchipathula_gopalakrishna_saketh" },
     { name: "M Pravallika", username: "m_pravallika" },
+    { name: "Mani Vivek Kumar Palani", username: "mani_vivek_kumar_palani" },
+    { name: "Mohamud Suhaibuddin", username: "mohamud_suhaibuddin" },
     { name: "Namburi Veera Venkata Karthikeya", username: "namburi_veera_venkata_karthikeya" },
+    { name: "Narendra Papanaboina", username: "narendra_papanaboina" },
+    { name: "Sathvik Namburi", username: "sathvik_namburi" },
+    { name: "Shaik Yasin Begum", username: "shaik_yasin_begum" },
+    { name: "Tirumani Hema Chandra Koteswar", username: "tirumani_hema_chandra_koteswar" },
     { name: "Veera Kota Sai Venkata Ganesh Sumanth", username: "veera_kota_sai_venkata_ganesh_sumanth" },
     { name: "Veeravilli Rohith", username: "veeravilli_rohith" },
-    { name: "Mohamud Suhaibuddin", username: "mohamud_suhaibuddin" },
-    { name: "Konchada Ayush", username: "konchada_ayush" },
-    { name: "Gopisetti Pushpa Latha Naga Lakshmi Devi", username: "gopisetti_pushpa_latha_naga_lakshmi_devi" },
-    { name: "Chavali Krishna Kumari", username: "chavali_krishna_kumari" },
-    { name: "Vidadasu Tulasi Suryakala", username: "vidadasu_tulasi_suryakala" },
-    { name: "Charishma Ganta", username: "charishma_ganta" },
-    { name: "Mani Vivek Kumar Palani", username: "mani_vivek_kumar_palani" },
-    { name: "Bandi Saravan Rahul", username: "bandi_saravan_rahul" },
-    { name: "Appana Naga Vinay", username: "appana_naga_vinay" },
-    { name: "Bandreddi Siva Shankar", username: "bandreddi_siva_shankar" },
-    { name: "Chintha Abhinav Reddy", username: "chintha_abhinav_reddy" },
-    { name: "Karri Sri Vishnu Vardhan Reddy", username: "karri_sri_vishnu_vardhan_reddy" },
-    { name: "Shaik Yasin Begum", username: "shaik_yasin_begum" },
-    { name: "Atla Divya Sree", username: "atla_divya_sree" },
-    { name: "Narendra Papanaboina", username: "narendra_papanaboina" }
+    { name: "Vidadasu Tulasi Suryakala", username: "vidadasu_tulasi_suryakala" }
 ];
 
 function Login() {
@@ -70,11 +71,13 @@ function Login() {
         try {
             setLoading(true);
 
-            // Sends username and password directly to the auth API
+            const cleanUsername = formData.username.trim();
+            const cleanPassword = formData.password.trim();
+
             const response = await loginUser({
-                email: formData.username,
-                username: formData.username,
-                password: formData.password,
+                email: cleanUsername,
+                username: cleanUsername,
+                password: cleanPassword,
             });
 
             localStorage.setItem("token", response.token);
@@ -87,10 +90,14 @@ function Login() {
                 navigate("/dashboard");
             }
         } catch (error) {
-            toast.error(
+            console.error("Login error:", error);
+            const msg =
                 error.response?.data?.message ||
-                "Invalid username or password."
-            );
+                (error.code === "ERR_NETWORK"
+                    ? "Network error: Unable to reach backend server. Please check your connection."
+                    : error.message) ||
+                "Invalid username or password.";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }

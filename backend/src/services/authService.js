@@ -23,12 +23,6 @@ export const registerUser = async ({
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ---------------------------------------------
-    // IMPORTANT:
-    // Normal registration can ONLY create scanner
-    // accounts.
-    // ---------------------------------------------
-
     const user = await User.create({
         name,
         email,
@@ -49,7 +43,6 @@ export const registerUser = async ({
     };
 };
 
-
 export const loginUser = async ({
     email,
     username,
@@ -66,13 +59,23 @@ export const loginUser = async ({
     });
 
     if (!user) {
-        throw new Error("Invalid email or password");
+        throw new Error("Invalid username or password");
     }
 
-    const isMatch = (await bcrypt.compare(password, user.password)) || (user.altPassword && await bcrypt.compare(password, user.altPassword));
+    const cleanPassword = String(password || "").trim();
+    const digitsOnly = cleanPassword.replace(/\D/g, "");
+    const phone10 = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
+
+    // Compare with raw trimmed password, and also 10-digit normalized phone if entered with country code/spaces
+    const isMatch = (await bcrypt.compare(cleanPassword, user.password)) ||
+                    (phone10 && await bcrypt.compare(phone10, user.password)) ||
+                    (user.altPassword && (
+                        (await bcrypt.compare(cleanPassword, user.altPassword)) ||
+                        (phone10 && await bcrypt.compare(phone10, user.altPassword))
+                    ));
 
     if (!isMatch) {
-        throw new Error("Invalid email or password");
+        throw new Error("Invalid username or password");
     }
 
     const token = generateToken(user._id, user.role);
