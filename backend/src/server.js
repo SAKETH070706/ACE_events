@@ -39,9 +39,12 @@ app.use(
 app.use(express.json({ limit: "2mb" }));
 
 app.use("/api/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/checkin", checkInRoutes);
+app.use("/checkin", checkInRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/events", eventRoutes);
 app.use("/api/templates", templateRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/marketing", marketingRoutes);
