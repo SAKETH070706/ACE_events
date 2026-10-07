@@ -140,6 +140,10 @@ const getCurrentTimeMinutesIST = () => {
 /*
  * Find the session that is currently active.
  */
+/*
+ * Find the session that is currently active.
+ * Strict time window: Opens 30 minutes before startTime and closes 30 minutes after endTime.
+ */
 export const getCurrentSession = (event) => {
     const sessions = event?.checkIn?.sessions || [];
 
@@ -150,8 +154,8 @@ export const getCurrentSession = (event) => {
     const currentDate = getCurrentDateIST();
     const currentMinutes = getCurrentTimeMinutesIST();
 
-    // 1. Exact match within scheduled time window
-    const exactMatch = sessions.find((session) => {
+    // Check for session active in current time window (+30 min early grace, +30 min late grace)
+    const activeSession = sessions.find((session) => {
         if (session.date !== currentDate) {
             return false;
         }
@@ -163,17 +167,92 @@ export const getCurrentSession = (event) => {
             return false;
         }
 
-        return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+        const graceStartMinutes = Math.max(0, startMinutes - 30);
+        const graceEndMinutes = Math.min(1439, endMinutes + 30);
+
+        return currentMinutes >= graceStartMinutes && currentMinutes <= graceEndMinutes;
     });
 
-    if (exactMatch) return exactMatch;
+    return activeSession || null;
+};
 
-    // 2. Same date fallback (allows check-in before/after exact minutes on event day)
-    const todaySession = sessions.find((session) => session.date === currentDate);
-    if (todaySession) return todaySession;
+/*
+ * Generate clear explanation when no session is active.
+ */
+export const getInactiveSessionReason = (event) => {
+    const sessions = event?.checkIn?.sessions || [];
+    if (!sessions.length) {
+        return {
+            code: "NO_SESSIONS_CONFIGURED",
+            message: "No check-in sessions are configured for this event.",
+        };
+    }
 
-    // 3. Fallback to first session (allows pre-event testing and general check-in)
-    return sessions[0] || null;
+    const currentDate = getCurrentDateIST();
+    const currentMinutes = getCurrentTimeMinutesIST();
+
+    const formatMinutesToTime = (min) => {
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        const ampm = h >= 12 ? "PM" : "AM";
+        const h12 = h % 12 || 12;
+        return `${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ampm}`;
+    };
+
+    // 1. Check if there's an upcoming session today
+    const upcomingToday = sessions
+        .filter((s) => s.date === currentDate)
+        .sort((a, b) => (timeToMinutes(a.startTime) || 0) - (timeToMinutes(b.startTime) || 0))
+        .find((s) => {
+            const start = timeToMinutes(s.startTime);
+            return start !== null && (start - 30) > currentMinutes;
+        });
+
+    if (upcomingToday) {
+        const startMin = timeToMinutes(upcomingToday.startTime);
+        const opensAt = formatMinutesToTime(Math.max(0, startMin - 30));
+        return {
+            code: "SESSION_NOT_STARTED",
+            message: `Check-in for "${upcomingToday.name || upcomingToday.sessionId}" has not started yet. Opens at ${opensAt} IST (30 mins before ${upcomingToday.startTime}).`,
+        };
+    }
+
+    // 2. Check if sessions today have ended
+    const todaySessions = sessions.filter((s) => s.date === currentDate);
+    if (todaySessions.length > 0) {
+        const futureSession = sessions
+            .filter((s) => s.date > currentDate)
+            .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+        if (futureSession) {
+            return {
+                code: "SESSION_ENDED",
+                message: `Today's check-in sessions have closed. Next session "${futureSession.name}" is on ${futureSession.date} at ${futureSession.startTime}.`,
+            };
+        }
+
+        return {
+            code: "SESSION_ENDED",
+            message: "All check-in sessions for today have concluded.",
+        };
+    }
+
+    // 3. Event is on future date
+    const futureSession = sessions
+        .filter((s) => s.date > currentDate)
+        .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+    if (futureSession) {
+        return {
+            code: "EVENT_NOT_STARTED",
+            message: `Event has not started yet. First session starts on ${futureSession.date} at ${futureSession.startTime}.`,
+        };
+    }
+
+    return {
+        code: "NO_ACTIVE_SESSION",
+        message: "Check-in is currently closed. No active session available.",
+    };
 };
 
 
@@ -579,20 +658,18 @@ export const processCheckIn = async ({
 
 
     /*
-     * 4. Determine active session.
+     * 4. Determine active session (Strict window + 30 min grace).
      */
     const currentSession =
         getCurrentSession(event);
 
 
     if (!currentSession) {
+        const inactiveReason = getInactiveSessionReason(event);
         return {
             success: false,
-
-            code: "NO_ACTIVE_SESSION",
-
-            message:
-                "There is no active check-in session right now.",
+            code: inactiveReason.code,
+            message: inactiveReason.message,
         };
     }
 

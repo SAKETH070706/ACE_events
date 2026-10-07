@@ -11,7 +11,73 @@ import { scanCheckIn, manualCheckIn } from "../../services/checkInApi";
 import { getEvents } from "../../services/eventApi";
 import "./Scanner.css";
 
+
+// Web Audio API Sound Synthesizer (Zero network or audio file dependencies)
+const playScanSound = (type = "success") => {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+
+        if (type === "success") {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.08);
+
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.2);
+
+            if (navigator.vibrate) navigator.vibrate(120);
+        } else if (type === "warning") {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            osc.frequency.setValueAtTime(330, ctx.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.25);
+
+            if (navigator.vibrate) navigator.vibrate([100, 60, 100]);
+        } else {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(260, ctx.currentTime);
+            osc.frequency.setValueAtTime(180, ctx.currentTime + 0.12);
+
+            gain.gain.setValueAtTime(0.25, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+
+            if (navigator.vibrate) navigator.vibrate([150]);
+        }
+    } catch (e) {}
+};
+
 const ERROR_MESSAGES = {
+    SESSION_NOT_STARTED: "Check-in for this session has not started yet.",
+    SESSION_ENDED: "Check-in for this session has ended.",
+    EVENT_NOT_STARTED: "Event has not started yet.",
     INVALID_QR: "This QR code is invalid or not recognized.",
     CHECKIN_DISABLED: "Check-In is not enabled for this event.",
     NO_ACTIVE_SESSION: "There is currently no active check-in session.",
@@ -146,6 +212,7 @@ function Scanner() {
                     attendance: res.attendance,
                 });
                 setLastScanType("success");
+                playScanSound("success");
                 toast.success("Check-In Successful!");
             }
         } catch (err) {
@@ -163,6 +230,7 @@ function Scanner() {
                     attendance: data?.attendance,
                 });
                 setLastScanType("warning");
+                playScanSound("warning");
                 toast.error(userMsg);
             } else {
                 setScanResult({
@@ -171,6 +239,7 @@ function Scanner() {
                     message: userMsg,
                 });
                 setLastScanType("error");
+                playScanSound("error");
                 toast.error(userMsg);
             }
         } finally {
@@ -362,6 +431,7 @@ function Scanner() {
                     ...prev,
                     participantId: "",
                 }));
+                playScanSound("success");
                 toast.success(res.message || "Check-In Successful!");
             }
         } catch (err) {
@@ -459,6 +529,32 @@ function Scanner() {
                                     </div>
                                 )}
                             </div>
+
+                            {scanResult && mode === "camera" && (
+                                <div className={`camera-quick-badge ${scanResult.type}`} style={{
+                                    marginTop: "12px",
+                                    padding: "12px 16px",
+                                    borderRadius: "8px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    fontWeight: "600",
+                                    fontSize: "0.95rem",
+                                    background: scanResult.type === "success" ? "#dcfce7" : scanResult.type === "warning" ? "#fef3c7" : "#fee2e2",
+                                    color: scanResult.type === "success" ? "#166534" : scanResult.type === "warning" ? "#92400e" : "#991b1b",
+                                    border: `1px solid ${scanResult.type === "success" ? "#bbf7d0" : scanResult.type === "warning" ? "#fde68a" : "#fecaca"}`
+                                }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                        {scanResult.type === "success" ? <FaCheckCircle /> : scanResult.type === "warning" ? <FaExclamationTriangle /> : <FaTimesCircle />}
+                                        <span>
+                                            {scanResult.participant?.name ? `${scanResult.participant.name} (${scanResult.participant.participantId || "ID"}): ${scanResult.message}` : scanResult.message || scanResult.title}
+                                        </span>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={resumeScanner} style={{ padding: "4px 8px", fontSize: "0.8rem", marginLeft: "8px" }}>
+                                        <FaRedo /> Next
+                                    </Button>
+                                </div>
+                            )}
 
                             {cameraError && (
                                 <div className="camera-error-banner">
