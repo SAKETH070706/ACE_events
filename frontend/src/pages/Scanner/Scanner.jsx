@@ -45,6 +45,7 @@ function Scanner() {
     const [selectedEventObj, setSelectedEventObj] = useState(null);
 
     const html5QrCodeRef = useRef(null);
+    const autoResumeTimerRef = useRef(null);
     const scannerRegionId = "qr-reader-region";
 
     let currentUser = null;
@@ -174,6 +175,12 @@ function Scanner() {
             }
         } finally {
             setProcessing(false);
+            if (autoResumeTimerRef.current) {
+                clearTimeout(autoResumeTimerRef.current);
+            }
+            autoResumeTimerRef.current = setTimeout(() => {
+                resumeScanner();
+            }, 2500);
         }
     };
 
@@ -264,7 +271,7 @@ function Scanner() {
         if (html5QrCodeRef.current) {
             try {
                 if (html5QrCodeRef.current.isScanning) {
-                    await html5QrCodeRef.current.pause(true);
+                    await html5QrCodeRef.current.pause(false);
                 }
             } catch (e) {
                 // Ignore pause error
@@ -273,6 +280,10 @@ function Scanner() {
     };
 
     const resumeScanner = async () => {
+        if (autoResumeTimerRef.current) {
+            clearTimeout(autoResumeTimerRef.current);
+            autoResumeTimerRef.current = null;
+        }
         if (processing || startingScanner) return;
         setScanResult(null);
         if (html5QrCodeRef.current && scanning) {
@@ -288,6 +299,9 @@ function Scanner() {
 
     useEffect(() => {
         return () => {
+            if (autoResumeTimerRef.current) {
+                clearTimeout(autoResumeTimerRef.current);
+            }
             if (html5QrCodeRef.current) {
                 try {
                     if (html5QrCodeRef.current.isScanning) {
